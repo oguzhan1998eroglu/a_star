@@ -32,33 +32,40 @@ def find_position(final, row_size, column_size):
 
 
 def solve(start_map, final, row_size, column_size):
-    closed_list = []
     position_dict = find_position(final, row_size, column_size)
     start = start_map
     while start != final:
         next_states = []
         for row in range(row_size):
             for column in range(column_size):
-                if start[row][column] == 0:
-                    if is_valid([row-1, column], row_size, column_size) and start[row-1][column] != 0:  # up
+                if start[row][column] != 0:
+                    if is_valid([row-1, column], row_size, column_size) and start[row-1][column] == 0:  # up
+                        if position_dict[start[row][column]] == [row, column]:
+                            continue
                         state = State()
                         state.map = swap(start, [row, column], [row-1, column])
-                        state.h = manhattan_distance([row, column], position_dict[start[row-1][column]])
+                        state.h = manhattan_distance([row-1, column], position_dict[start[row][column]])
                         next_states.append(state)
-                    if is_valid([row, column+1], row_size, column_size) and start[row][column+1] != 0:  # right
+                    if is_valid([row, column+1], row_size, column_size) and start[row][column+1] == 0:  # right
+                        if position_dict[start[row][column]] == [row, column]:
+                            continue
                         state = State()
                         state.map = swap(start, [row, column], [row, column+1])
-                        state.h = manhattan_distance([row, column], position_dict[start[row][column+1]])
+                        state.h = manhattan_distance([row, column+1], position_dict[start[row][column]])
                         next_states.append(state)
-                    if is_valid([row+1, column], row_size, column_size) and start[row+1][column] != 0:  # down
+                    if is_valid([row+1, column], row_size, column_size) and start[row+1][column] == 0:  # down
+                        if position_dict[start[row][column]] == [row, column]:
+                            continue
                         state = State()
                         state.map = swap(start, [row, column], [row+1, column])
-                        state.h = manhattan_distance([row, column], position_dict[start[row+1][column]])
+                        state.h = manhattan_distance([row+1, column], position_dict[start[row][column]])
                         next_states.append(state)
-                    if is_valid([row, column-1], row_size, column_size) and start[row][column-1] != 0:  # left
+                    if is_valid([row, column-1], row_size, column_size) and start[row][column-1] == 0:  # left
+                        if position_dict[start[row][column]] == [row, column]:
+                            continue
                         state = State()
                         state.map = swap(start, [row, column], [row, column-1])
-                        state.h = manhattan_distance([row, column], position_dict[start[row][column-1]])
+                        state.h = manhattan_distance([row, column-1], position_dict[start[row][column]])
                         next_states.append(state)
         next_states.sort(key=attrgetter('h'))
         start = next_states[0].map
