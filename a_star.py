@@ -17,35 +17,47 @@ def is_valid(index, row_size, column_size):
 
 def up_is_valid(map, boundary, row_size, column_size):
     starting_point = boundary[0]
-    up_is_v = is_valid([starting_point[0]-1, starting_point[1]], row_size, column_size)
+    finishing_point = boundary[1]
+    up_is_v = True
+    size = abs(starting_point[1] - finishing_point[1]) + 1
+    for i in range(size):
+        if not is_valid([starting_point[0]-1, starting_point[1]+i], row_size, column_size):
+            up_is_v = False
     up_is_zero = True
-    width = boundary[1][1] - boundary[0][1] + 1
     if up_is_v:
-        for i in range(width):
+        for i in range(size):
             if map[boundary[0][0]-1][boundary[0][1]+i] != 0:
                 up_is_zero = False
     return up_is_zero and up_is_v
 
 
 def right_is_valid(map, boundary, row_size, column_size):
+    starting_point = boundary[0]
     finishing_point = boundary[1]
-    right_is_v = is_valid([finishing_point[0], finishing_point[1]+1], row_size, column_size)
+    right_is_v = True
+    size = abs(starting_point[0] - finishing_point[0]) + 1
+    for i in range(size):
+        if not is_valid([finishing_point[0]-i, finishing_point[1]+1], row_size, column_size):
+            right_is_v = False
     right_is_zero = True
-    height = boundary[1][0] - boundary[0][0] + 1
     if right_is_v:
-        for i in range(height):
+        for i in range(size):
             if map[boundary[1][0]-i][boundary[1][1]+1] != 0:
                 right_is_zero = False
     return right_is_zero and right_is_v
 
 
 def down_is_valid(map, boundary, row_size, column_size):
+    starting_point = boundary[0]
     finishing_point = boundary[1]
-    down_is_v = is_valid([finishing_point[0]+1, finishing_point[1]], row_size, column_size)
+    down_is_v = True
+    size = abs(starting_point[1] - finishing_point[1]) + 1
+    for i in range(size):
+        if not is_valid([finishing_point[0]+1, finishing_point[1]-i], row_size, column_size):
+            down_is_v = False
     down_is_zero = True
-    width = boundary[1][1] - boundary[0][1] + 1
     if down_is_v:
-        for i in range(width):
+        for i in range(size):
             if map[boundary[1][0]+1][boundary[1][1]-i] != 0:
                 down_is_zero = False
     return down_is_zero and down_is_v
@@ -53,11 +65,15 @@ def down_is_valid(map, boundary, row_size, column_size):
 
 def left_is_valid(map, boundary, row_size, column_size):
     starting_point = boundary[0]
-    left_is_v = is_valid([starting_point[0], starting_point[1]-1], row_size, column_size)
+    finishing_point = boundary[1]
+    left_is_v = True
+    size = abs(starting_point[0] - finishing_point[0]) + 1
+    for i in range(size):
+        if not is_valid([starting_point[0]+i, starting_point[1]-1], row_size, column_size):
+            left_is_v = False
     left_is_zero = True
-    height = boundary[0][0] - boundary[1][0] + 1
     if left_is_v:
-        for i in range(height):
+        for i in range(size):
             if map[boundary[0][0]+i][boundary[0][1]-1] != 0:
                 left_is_zero = False
     return left_is_zero and left_is_v
@@ -140,81 +156,121 @@ def find_position(start, row_size, column_size, pieces):
     return position_dict
 
 
-def solve(start_map, final, row_size, column_size, pieces):
-    final_position_dict = find_position(final, row_size, column_size, pieces)
+def solve(start_map, finals_array, row_size, column_size, pieces):
+    final_position_dicts = []
+    for final in finals_array:
+        final_position_dicts.append(find_position(final, row_size, column_size, pieces))
     start = start_map
-    while start != final:
+    while start not in finals_array:
         start_position_dict = find_position(start, row_size, column_size, pieces)
-        """print(start)
-        print(start_position_dict)"""
         next_states = []
-        closed_list = []
-        for row in range(row_size):
-            for column in range(column_size):
-                if start[row][column] != 0:
-                    if start[row][column] not in closed_list:
-                        closed_list.append(start[row][column])
-                        if up_is_valid(start, start_position_dict[start[row][column]], row_size, column_size):  # up
-                            if final_position_dict[start[row][column]][0] == [row, column]:
-                                continue
-                            state = State()
-                            h = manhattan_distance([row, column], final_position_dict[start[row][column]][0])
-                            state.map = swap_up(start, start_position_dict[start[row][column]], row_size, column_size)
-                            state.h = manhattan_distance([row-1, column], final_position_dict[start[row][column]][0])
-                            if state.h <= h:
-                                next_states.append(state)
-                        if right_is_valid(start, start_position_dict[start[row][column]], row_size, column_size):  # right
-                            if final_position_dict[start[row][column]][0] == [row, column]:
-                                continue
-                            state = State()
-                            h = manhattan_distance([row, column], final_position_dict[start[row][column]][0])
-                            state.map = swap_right(start, start_position_dict[start[row][column]], row_size, column_size)
-                            state.h = manhattan_distance([row, column+1], final_position_dict[start[row][column]][0])
-                            if state.h <= h:
-                                next_states.append(state)
-                        if down_is_valid(start, start_position_dict[start[row][column]], row_size, column_size):  # down
-                            if final_position_dict[start[row][column]][0] == [row, column]:
-                                continue
-                            state = State()
-                            h = manhattan_distance([row, column], final_position_dict[start[row][column]][0])
-                            state.map = swap_down(start, start_position_dict[start[row][column]], row_size, column_size)
-                            state.h = manhattan_distance([row+1, column], final_position_dict[start[row][column]][0])
-                            if state.h <= h:
-                                next_states.append(state)
-                        if left_is_valid(start, start_position_dict[start[row][column]], row_size, column_size):  # left
-                            if final_position_dict[start[row][column]][0] == [row, column]:
-                                continue
-                            state = State()
-                            h = manhattan_distance([row, column], final_position_dict[start[row][column]][0])
-                            state.map = swap_left(start, start_position_dict[start[row][column]], row_size, column_size)
-                            state.h = manhattan_distance([row, column-1], final_position_dict[start[row][column]][0])
-                            if state.h <= h:
-                                next_states.append(state)
+        for i in range(len(finals_array)):
+            final_position_dict = final_position_dicts[i]
+            closed_list = []
+            for row in range(row_size):
+                for column in range(column_size):
+                    if start[row][column] != 0:
+                        if start[row][column] not in closed_list:
+                            closed_list.append(start[row][column])
+                            if up_is_valid(start, start_position_dict[start[row][column]], row_size, column_size):  # up
+                                cont = False
+                                for i in range(len(finals_array)):
+                                    final_position_dict = final_position_dicts[i]
+                                    if final_position_dict[start[row][column]][0] == [row, column]:
+                                        cont = True
+                                if cont:
+                                    continue
+                                state = State()
+                                h = manhattan_distance([row, column], final_position_dict[start[row][column]][0])
+                                state.map = swap_up(start, start_position_dict[start[row][column]], row_size, column_size)
+                                state.h = manhattan_distance([row-1, column], final_position_dict[start[row][column]][0])
+                                if state.h <= h:
+                                    next_states.append(state)
+                            if right_is_valid(start, start_position_dict[start[row][column]], row_size, column_size):  # right
+                                cont = False
+                                for i in range(len(finals_array)):
+                                    final_position_dict = final_position_dicts[i]
+                                    if final_position_dict[start[row][column]][0] == [row, column]:
+                                        cont = True
+                                if cont:
+                                    continue
+                                state = State()
+                                h = manhattan_distance([row, column], final_position_dict[start[row][column]][0])
+                                state.map = swap_right(start, start_position_dict[start[row][column]], row_size, column_size)
+                                state.h = manhattan_distance([row, column+1], final_position_dict[start[row][column]][0])
+                                if state.h <= h:
+                                    next_states.append(state)
+                            if down_is_valid(start, start_position_dict[start[row][column]], row_size, column_size):  # down
+                                cont = False
+                                for i in range(len(finals_array)):
+                                    final_position_dict = final_position_dicts[i]
+                                    if final_position_dict[start[row][column]][0] == [row, column]:
+                                        cont = True
+                                if cont:
+                                    continue
+                                state = State()
+                                h = manhattan_distance([row, column], final_position_dict[start[row][column]][0])
+                                state.map = swap_down(start, start_position_dict[start[row][column]], row_size, column_size)
+                                state.h = manhattan_distance([row+1, column], final_position_dict[start[row][column]][0])
+                                if state.h <= h:
+                                    next_states.append(state)
+                            if left_is_valid(start, start_position_dict[start[row][column]], row_size, column_size):  # left
+                                cont = False
+                                for i in range(len(finals_array)):
+                                    final_position_dict = final_position_dicts[i]
+                                    if final_position_dict[start[row][column]][0] == [row, column]:
+                                        cont = True
+                                if cont:
+                                    continue
+                                state = State()
+                                h = manhattan_distance([row, column], final_position_dict[start[row][column]][0])
+                                state.map = swap_left(start, start_position_dict[start[row][column]], row_size, column_size)
+                                state.h = manhattan_distance([row, column-1], final_position_dict[start[row][column]][0])
+                                if state.h <= h:
+                                    next_states.append(state)
         next_states.sort(key=attrgetter('h'))
         start = next_states[0].map
         print(start)
 
+start = [[1, 1, 0, 0], [2, 3, 3, 0], [2, 0, 4, 5], [2, 6, 0, 5], [0, 6, 7, 5]]
+final1 = [[7, 6, 1, 1], [4, 6, 3, 3], [0, 0, 5, 2], [0, 0, 5, 2], [0, 0, 5, 2]]
+final2 = [[7, 4, 1, 1], [0, 0, 3, 3], [2, 0, 0, 5], [2, 6, 0, 5], [2, 6, 0, 5]]
+#finals_array = [final1, final2]
+finals_array = [final1, final2]
+row = 5
+column = 4
+pieces = 7
+print(start)
+solve(start, finals_array, row, column, pieces)
 
 
-start = [[0, 1, 1, 0, 0, 2, 2, 0], [0, 1, 1, 0, 0, 2, 2, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 3, 3, 0, 0, 4, 4, 0], [0, 3, 3, 0, 0, 4, 4, 0]]
+"""start = [[0, 0, 0], [0, 1, 0], [0, 2, 0], [0, 2, 0]]
+final1 = [[0, 2, 0], [0, 2, 0], [0, 0, 0], [0, 0, 1]]
+final2 = [[0, 2, 0], [1, 2, 0], [0, 0, 0], [0, 0, 0]]
+finals_array = [final1, final2]
+row = 4
+column = 3
+pieces = 4
+print(start)
+solve(start, finals_array, row, column, pieces)"""
+
+
+"""start = [[0, 1, 1, 0, 0, 2, 2, 0], [0, 1, 1, 0, 0, 2, 2, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 3, 3, 0, 0, 4, 4, 0], [0, 3, 3, 0, 0, 4, 4, 0]]
 final = [[0, 2, 2, 0, 0, 4, 4, 0], [0, 2, 2, 0, 0, 4, 4, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, 1, 1, 0, 0, 3, 3, 0], [0, 1, 1, 0, 0, 3, 3, 0]]
+finals_array = [final]
 row = 6
 column = 8
 pieces = 4
 print(start)
-solve(start, final, row, column, pieces)
+solve(start, finals_array, row, column, pieces)"""
 
 
 """start = [[1, 3, 5], [4, 7, 2], [6, 8, 0]]
 final = [[1, 2, 3], [4, 5, 0], [6, 7, 8]]
+finals_array = [final]
 row = 3
 column = 3
 pieces = 8
 print(start)
-solve(start, final, row, column, pieces)"""
-
-
-
-
-
+solve(start, finals_array, row, column, pieces)"""
 
